@@ -1,0 +1,52 @@
+name: Run tests
+
+on:
+  # run on push to branch 'pytest'
+  push:
+    branches:
+      - pytest
+
+jobs:
+  test:
+    name: ${{ matrix.python-version }}-${{ matrix.architecture }}-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+        - ubuntu-latest
+        python-version:
+        - 3.8
+        architecture:
+        - x64
+
+      # abort all jobs as soon as one fails
+      fail-fast: true
+
+    services:
+      db2:
+        image: ibmcom/db2:11.5.0.0a
+        env:
+          DB2INST1_PASSWORD: my-db-secret
+          LICENSE: accept
+          DBNAME: test
+        ports:
+        - 50000:50000
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Set up python
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.architecture }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pipenv
+          cd ibm_db_sa && pipenv sync --dev
+
+      - name: Run tests
+        run: cd ibm_db_sa && pipenv run pytest
