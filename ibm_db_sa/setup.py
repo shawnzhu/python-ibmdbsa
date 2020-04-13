@@ -58,5 +58,5 @@ setup(
                     ]
        },
        zip_safe=False,
-       tests_require=['nose >= 0.11'],
+       tests_require=['pytest'],
      )
